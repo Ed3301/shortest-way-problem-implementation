@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		#input {
+			width: 500px;
+		}
+		h1, h3, #box {
+			text-align: center;
+		}
+		#result {
+			margin-top: 30px;
+			font-size: 25px;
+		}
+		#sankey_basic {
+			display: inline-block;
+			margin-top: 20px;
+		}
+	</style>
+</head>
+<body>
+<h1>
+	The shortest way's problem solution
+</h1>
+<h3>
+	Please enter numbers 3 by 3, relevant the two ways and the time needed to get from one to another. <br>
+	For example 123 means that to get from point "1" to point "2" needs 3 unit of time (3 hours). <br>
+	Example - 121 231 253 132  351 241 562
+</h3>
+<div id="box">
+	<input type="text" id="input">
+	<button onclick="calculate()">Calculate</button>
+	<div id="result"></div>
+	<div id="sankey_basic" ></div>
+</div>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+	let g = {}, p = {}, c = {},
+			max = 0,
+			box = document.getElementById('result'),
+			lowestCost = Infinity,
+			graphRows = [];
+
+	function drawChart() {
+		var data = new google.visualization.DataTable();
+		data.addColumn('string', 'From');
+		data.addColumn('string', 'To');
+		data.addColumn('number', 'Weight');
+		data.addRows(graphRows);
+
+		// Sets chart options.
+		var options = {
+			width: 600,
+		};
+
+		// Instantiates and draws our chart, passing in some options.
+		var chart = new google.visualization.Sankey(document.getElementById('sankey_basic'));
+		chart.draw(data, options);
+	}
+
+	function result(deletedParam){
+		window.graph = g;
+		var parents = p;
+		var costs = c;
+		var	myNodes = [max],
+				myNode = max,
+				processed = [];
+		window.isTrueFunc;
+
+		delete graph[deletedParam];
+
+		function find_lowest_cost_node(costs){
+			var lowest_cost = Infinity;
+			var lowest_cost_node = false;
+			for(var node in costs){
+				var cost = costs[node];
+				if(cost < lowest_cost && !processed.includes(node)){
+					lowest_cost = cost;
+					lowest_cost_node = node;
+				}
+			}
+			return lowest_cost_node;
+		}
+
+		var node = find_lowest_cost_node(costs);
+
+		while(node){
+			var cost = costs[node];
+			var neighbors = graph[node];
+			for(var n in neighbors){
+				var new_cost = cost + neighbors[n];
+				if(costs[n] > new_cost){
+					costs[n] = new_cost;
+					parents[n] = node;
+					lowestCost = costs[n];
+				}
+			}
+			processed.push(node);
+			node = find_lowest_cost_node(costs);
+		}
+		while(parents[myNode]){
+			myNodes.push(parents[myNode]);
+			myNode = parents[myNode];
+		}
+
+		myNodes.reverse();
+		box.innerHTML = 'The shortest way is ' + myNodes.toString().split(',').join(' -> ') + ' ( ' + lowestCost + ' hours )';
+
+		if(processed.includes(max)) {
+			isTrueFunc = true;
+		} else {
+			box.innerHTML = '';
+			isTrueFunc = false;
+		}
+	}
+
+	function calculate() {
+		let input = document.getElementById('input').value.split(' ').join('');
+		for (let i = 0; i < input.length; i++) {
+			if((i % 3 == 0 && i != 0) || i + 1 == input.length) {
+				if(i + 1 == input.length) {
+					graphRows.push([input[i - 2], input[i - 1], parseInt(input[i])]);
+				} else {
+					graphRows.push([input[i - 3], input[i - 2], parseInt(input[i - 1])]);
+				}
+			}
+			if (i % 3 == 0) {
+				if (g[input[i]] == undefined){
+					g[input[i]] = {};
+				}
+				g[input[i]][input[i + 1]] = parseInt(input[i + 2]);
+				if(i > 9) {
+					c[input[i + 1]] = 10000000;
+					p[input[i + 1]] = false;
+				} else {
+					c[input[i + 1]] = parseInt(input[i + 2]);
+					p[input[i + 1]] = input[i];
+				}
+			}
+		}
+
+		for(let key in g){
+			var obj = g[key];
+			for(let key0 in obj){
+				if(parseInt(key0) > max){
+					max = parseInt(key0);
+				}
+			}
+		}
+		max = max.toString();
+		g[max] = {};
+
+		result();
+
+		for(var i in graph){
+			result(i);
+		}
+
+		google.charts.load('current', {'packages':['sankey']});
+		google.charts.setOnLoadCallback(drawChart);
+	}
+
+</script>
+</body>
+</html>
